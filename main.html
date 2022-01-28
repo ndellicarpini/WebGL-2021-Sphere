@@ -1,0 +1,128 @@
+<!-- Nicholas Delli Carpini -->
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Project 2</title>
+
+        <!-- STYLESHEET -->
+        <link rel="stylesheet" href="style.css">
+
+        <!-- VERTEX SHADER -->
+        <script id="vshader" type="x-shader/x-vertex">
+
+        precision mediump int;
+        precision mediump float;
+
+        uniform int lightingFlag;
+        uniform int renderingFlag;
+        uniform int wireframeFlag;
+
+        uniform mat4 projectionM;
+        uniform mat4 viewM;
+
+        attribute vec4 pointCoord;
+        attribute vec4 normalCoord;
+        uniform vec4 lightingCoord;
+
+        uniform vec4 ambientV;
+        uniform vec4 diffuseV;
+        uniform vec4 specularV;
+        uniform float shininess;
+
+        varying vec4 fColor;
+        varying vec3 L, N, V;
+
+        void main() {
+            if (renderingFlag == 1) {
+                    vec3 pos = (viewM * pointCoord).xyz;
+
+                    L = normalize(lightingCoord.xyz - pos);
+                    N = normalize(viewM * normalCoord).xyz;
+                    V = normalize(-pos);
+
+                if (wireframeFlag == 1) {
+                    fColor = vec4(1.0, 1.0, 1.0, 1.0);
+                }
+                else if (lightingFlag == 0) {
+                    vec3 R = (2.0 * dot(L, N) * N) - L;
+
+                    vec4 diffuse = diffuseV * dot(L, N);
+                    vec4 specular = specularV * pow(max(dot(V, R), 0.0), shininess);
+
+                    fColor = diffuse + specular + ambientV;
+                    fColor.a = 1.0;
+                }
+            }
+
+            gl_Position = projectionM * viewM * pointCoord;
+        }
+        </script>
+
+        <!-- FRAGMENT SHADER -->
+        <script id="fshader" type="x-shader/x-fragment">
+
+        precision mediump int;
+        precision mediump float;
+
+        uniform int lightingFlag;
+        uniform int renderingFlag;
+        uniform int wireframeFlag;
+
+        uniform vec4 ambientV;
+        uniform vec4 diffuseV;
+        uniform vec4 specularV;
+        uniform float shininess;
+
+        varying vec4 fColor;
+        varying vec3 L, N, V;
+
+        void main() {
+            if (renderingFlag == 0) {
+                gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+            }
+            else {
+                if (wireframeFlag == 1) {
+                    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+                }
+                else if (lightingFlag == 1) {
+                    vec3 R = (2.0 * dot(L, N) * N) - L;
+
+                    vec4 diffuse = diffuseV * dot(L, N);
+                    vec4 specular = specularV * pow(max(dot(V, R), 0.0), shininess);
+
+                    vec4 tempColor = diffuse + specular + ambientV;
+                    tempColor.a = 1.0;
+
+                    gl_FragColor = tempColor;
+                }
+                else {
+                    gl_FragColor = fColor;
+                }
+            }
+        }
+        </script>
+
+        <!-- EXAMPLE LIBRARIES -->
+        <script src="lib/webgl-utils.js"></script>
+        <script src="lib/initShaders.js"></script>
+        <script src="lib/MV.js"></script>
+
+        <!-- JAVASCRIPT -->
+        <script src="main.js"></script>
+
+    </head>
+    <body onload="main()">
+        <div id="topbar">
+            <div id="topLeft">
+                <h1 id="title">Project 2</h1>
+            </div>
+        </div>
+        <div id="content">
+            <canvas id="webgl">
+                If you can read this, its too late
+            </canvas>
+        </div>
+    </body>
+</html>
